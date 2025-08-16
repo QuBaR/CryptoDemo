@@ -1,6 +1,0 @@
-Congratulations, student!
-
-You have discovered the hidden easter egg in this project.
-Keep exploring, keep learning, and remember: cryptography is both fun and powerful.
-
-Best wishes from your teacher!
