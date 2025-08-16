@@ -1,0 +1,59 @@
+# .gitignore for .NET, Visual Studio, and C# projects
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.vs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/
+
+# NuGet
+*.nupkg
+# The packages folder can be ignored if package restore is enabled
+packages/
+# NuGet v3's project.json files produces this folder
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Others
+*.log
+*.tlog
+*.cache
+*.pdb
+*.dbmdl
+*.bak
+*.backup
+*.tmp
+*.temp
+*.vspscc
+*.vssscc
+*.vsscc
+*.orig
+*.rej
+_ReSharper*/
+
+# Test results
+TestResults/
+
+# Publish
+publish/
+
+# Local secrets
+secrets.json
