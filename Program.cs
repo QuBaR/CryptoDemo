@@ -16,11 +16,12 @@ class Program
             Console.WriteLine("4) RSA (asymmetrisk)");
             Console.WriteLine("5) Hybrid (AES + RSA)");
             Console.WriteLine("6) Filkryptering (AES-GCM)");
-            Console.WriteLine("7) Avsluta");
+            Console.WriteLine("7) Benchmark: AES vs RSA");
+            Console.WriteLine("8) Avsluta");
             Console.Write("Val: ");
             var choice = Console.ReadLine();
 
-            if (choice == "7" || string.IsNullOrWhiteSpace(choice)) break;
+            if (choice == "8" || string.IsNullOrWhiteSpace(choice)) break;
 
 
 
@@ -31,6 +32,7 @@ class Program
                 case "3":
                 case "4":
                 case "5":
+                case "7":
                     Console.Write("Ange klartext: ");
                     var plaintext = Console.ReadLine() ?? "";
                     if (choice == "1") DemoAes(plaintext);
@@ -38,6 +40,7 @@ class Program
                     else if (choice == "3") CompareAesCbcGcm(plaintext);
                     else if (choice == "4") DemoRsa(plaintext);
                     else if (choice == "5") DemoHybrid(plaintext);
+                    else if (choice == "7") BenchmarkAesVsRsa(plaintext);
                     break;
                 case "6":
                     FileEncryptionMenu();
@@ -46,6 +49,37 @@ class Program
                     Console.WriteLine("Ogiltigt val.");
                     break;
             }
+
+    // ===== BENCHMARK: AES vs RSA =====
+    static void BenchmarkAesVsRsa(string plaintext)
+    {
+        var sw = new System.Diagnostics.Stopwatch();
+        Console.WriteLine("\n[Benchmark: AES-256 CBC]");
+        using var aes = Aes.Create();
+        aes.KeySize = 256;
+        aes.GenerateKey();
+        aes.GenerateIV();
+        sw.Start();
+        var cipher = AesEncrypt(plaintext, aes.Key, aes.IV);
+        sw.Stop();
+        PrintLabelValue("Kryptering (ms)", sw.Elapsed.TotalMilliseconds.ToString("F2"));
+        sw.Restart();
+        var roundtrip = AesDecrypt(cipher, aes.Key, aes.IV);
+        sw.Stop();
+        PrintLabelValue("Dekryptering (ms)", sw.Elapsed.TotalMilliseconds.ToString("F2"));
+
+        Console.WriteLine("\n[Benchmark: RSA-2048]");
+        using var rsa = RSA.Create(2048);
+        var data = Encoding.UTF8.GetBytes(plaintext);
+        sw.Restart();
+        var cipherRsa = rsa.Encrypt(data, RSAEncryptionPadding.OaepSHA256);
+        sw.Stop();
+        PrintLabelValue("Kryptering (ms)", sw.Elapsed.TotalMilliseconds.ToString("F2"));
+        sw.Restart();
+        var roundtripRsa = rsa.Decrypt(cipherRsa, RSAEncryptionPadding.OaepSHA256);
+        sw.Stop();
+        PrintLabelValue("Dekryptering (ms)", sw.Elapsed.TotalMilliseconds.ToString("F2"));
+    }
     // ===== FILKRYPTERING MED AES-GCM =====
     static void FileEncryptionMenu()
     {
