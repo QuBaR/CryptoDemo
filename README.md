@@ -1,3 +1,4 @@
+
 # CryptoDemo
 
 A simple .NET console application demonstrating three cryptographic techniques:
@@ -26,7 +27,21 @@ A simple .NET console application demonstrating three cryptographic techniques:
      - `4` RSA (asymmetrisk)
      - `5` Hybrid (AES + RSA)
      - `6` Filkryptering (AES-GCM)
-     - `7` Avsluta
+  - `7` Benchmark: AES vs RSA
+  - `8` Avsluta
+  - För menyval 7: Ange klartext för att mäta och jämföra kryptering/dekrypteringstid för AES och RSA.
+### 7. Benchmark: AES vs RSA
+- **Function:** `BenchmarkAesVsRsa`
+- **Description:**
+  - Mäter och jämför tiden (ms) för kryptering och dekryptering av samma text med AES-256 (CBC) och RSA-2048.
+  - Visar resultatet direkt i terminalen.
+
+### 8. Brute force (exempel, ej i meny)
+- **Function:** `BruteForceAesGcmFile`
+- **Description:**
+  - Testar alla 4-siffriga lösenord (0000–9999) för att försöka dekryptera en AES-GCM-krypterad fil.
+  - Skriver resultatet till en angiven textfil om rätt lösenord hittas.
+  - Används för att visa svagheten med korta lösenord.
    - För menyval 1–5: Ange klartext när du blir ombedd.
    - För menyval 6: Ange filväg, välj om du vill kryptera (K) eller dekryptera (D), och ange lösenord.
 
@@ -88,5 +103,16 @@ A simple .NET console application demonstrating three cryptographic techniques:
 - File encryption output is written to disk, not shown in terminal.
 
 ---
+## Övning: Hitta det hemliga meddelandet
 
+I projektet finns en fil som innehåller ett hemligt meddelande, men den är krypterad med AES-GCM och lösenordsskyddad.
+
+Läraren har dock (av misstag?) sparat lösenordet i en annan fil i projektet.
+
+**Din uppgift:**
+- Leta upp den krypterade filen och filen med lösenordet.
+- Använd programmets filkrypteringsfunktion (menyval 6) för att dekryptera meddelandet.
+- Vad står det i meddelandet?
+
+Tips: Utforska projektmappen och läs README och källkod noggrant!
 **Author:** Robert Jansz , https://github.com/QuBaR/
