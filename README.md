@@ -103,7 +103,7 @@ A simple .NET console application demonstrating three cryptographic techniques:
 - File encryption output is written to disk, not shown in terminal.
 
 ---
-## Övning: Hitta det hemliga meddelandet
+## 🥚 Easter Egg Challenge: Find the Hidden Message
 
 I projektet finns en fil som innehåller ett hemligt meddelande, men den är krypterad med AES-GCM och lösenordsskyddad.
 
@@ -114,5 +114,33 @@ Läraren har dock (av misstag?) sparat lösenordet i en annan fil i projektet.
 - Använd programmets filkrypteringsfunktion (menyval 6) för att dekryptera meddelandet.
 - Vad står det i meddelandet?
 
-Tips: Utforska projektmappen och läs README och källkod noggrant!
+### 🔍 Hints and Tips:
+
+1. **File Detective Work:**
+   - Utforska projektmappen noggrant - lista alla filer
+   - Leta efter filer med ovanliga filsuffix eller namn
+   - En fil har innehåll som ser ut som krypterad data
+
+2. **Password Hunt:**
+   - Lösenordet är sparat i klartext i en av projektfilerna
+   - Det kan vara base64-kodat för att dölja det lite
+   - Hint: Kolla filer som kan innehålla känslig information
+
+3. **Decryption Process:**
+   - Använd menyval 6 i programmet för filkryptering/dekryptering
+   - Välj 'D' för dekryptering
+   - Om lösenordet är base64-kodat, behöver du avkoda det först
+
+4. **Troubleshooting:**
+   - Om dekryptering misslyckas: kontrollera att du använder rätt lösenord
+   - PowerShell kommando för base64-avkodning: `[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("base64string"))`
+   - Kom ihåg att lösenordet kanske behöver trimmas från whitespace
+
+5. **Success Indicators:**
+   - När du hittar rätt lösenord kommer dekrypteringen att lyckas
+   - Det dekrypterade meddelandet sparas i en ny fil
+   - Meddelandet innehåller en gratulation och kanske en liten överraskning!
+
+**Bonus Challenge:**
+Kan du förstå varför lösenordet kodades med base64? Vilka säkerhetsimplikationer har detta?
 **Author:** Robert Jansz , https://github.com/QuBaR/
