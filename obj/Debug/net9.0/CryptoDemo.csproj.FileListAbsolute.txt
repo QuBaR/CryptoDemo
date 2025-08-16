@@ -12,3 +12,4 @@ C:\Users\rober\source\repos\CryptoDemo\obj\Debug\net9.0\refint\CryptoDemo.dll
 C:\Users\rober\source\repos\CryptoDemo\obj\Debug\net9.0\CryptoDemo.pdb
 C:\Users\rober\source\repos\CryptoDemo\obj\Debug\net9.0\CryptoDemo.genruntimeconfig.cache
 C:\Users\rober\source\repos\CryptoDemo\obj\Debug\net9.0\ref\CryptoDemo.dll
+C:\Users\rober\source\repos\CryptoDemo\obj\Debug\net9.0\CryptoDemo.sourcelink.json

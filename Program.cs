@@ -10,33 +10,216 @@ class Program
         while (true)
         {
             Console.WriteLine("\n=== Krypteringsdemo (.NET) ===");
-            Console.WriteLine("1) AES (symmetrisk)");
-            Console.WriteLine("2) RSA (asymmetrisk)");
-            Console.WriteLine("3) Hybrid (AES + RSA)");
-            Console.WriteLine("4) Avsluta");
+            Console.WriteLine("1) AES (symmetrisk, CBC)");
+            Console.WriteLine("2) AES-GCM (symmetrisk, GCM)");
+            Console.WriteLine("3) Jämför AES CBC och GCM");
+            Console.WriteLine("4) RSA (asymmetrisk)");
+            Console.WriteLine("5) Hybrid (AES + RSA)");
+            Console.WriteLine("6) Filkryptering (AES-GCM)");
+            Console.WriteLine("7) Avsluta");
             Console.Write("Val: ");
             var choice = Console.ReadLine();
 
-            if (choice == "4" || string.IsNullOrWhiteSpace(choice)) break;
+            if (choice == "7" || string.IsNullOrWhiteSpace(choice)) break;
 
-            Console.Write("Ange klartext: ");
-            var plaintext = Console.ReadLine() ?? "";
+
 
             switch (choice)
             {
                 case "1":
-                    DemoAes(plaintext);
-                    break;
                 case "2":
-                    DemoRsa(plaintext);
-                    break;
                 case "3":
-                    DemoHybrid(plaintext);
+                case "4":
+                case "5":
+                    Console.Write("Ange klartext: ");
+                    var plaintext = Console.ReadLine() ?? "";
+                    if (choice == "1") DemoAes(plaintext);
+                    else if (choice == "2") DemoAesGcm(plaintext);
+                    else if (choice == "3") CompareAesCbcGcm(plaintext);
+                    else if (choice == "4") DemoRsa(plaintext);
+                    else if (choice == "5") DemoHybrid(plaintext);
+                    break;
+                case "6":
+                    FileEncryptionMenu();
                     break;
                 default:
                     Console.WriteLine("Ogiltigt val.");
                     break;
             }
+    // ===== FILKRYPTERING MED AES-GCM =====
+    static void FileEncryptionMenu()
+    {
+        Console.WriteLine("\n[Filkryptering med AES-GCM]");
+        Console.Write("Ange filväg: ");
+        var path = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path))
+        {
+            Console.WriteLine("Ogiltig filväg.");
+            return;
+        }
+        Console.Write("Kryptera (K) eller Dekryptera (D)? ");
+        var mode = Console.ReadLine()?.Trim().ToUpperInvariant();
+        Console.Write("Ange lösenord: ");
+        var password = Console.ReadLine();
+        if (string.IsNullOrEmpty(password))
+        {
+            Console.WriteLine("Lösenord krävs.");
+            return;
+        }
+        if (mode == "K")
+        {
+            var outPath = path + ".aesgcm";
+            try
+            {
+                EncryptFileAesGcm(path, outPath, password);
+                Console.WriteLine($"Filen krypterad: {outPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fel vid kryptering: {ex.Message}");
+            }
+        }
+        else if (mode == "D")
+        {
+            var outPath = path.EndsWith(".aesgcm") ? path.Substring(0, path.Length - 7) : path + ".decrypted";
+            try
+            {
+                DecryptFileAesGcm(path, outPath, password);
+                Console.WriteLine($"Filen dekrypterad: {outPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fel vid dekryptering: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Ogiltigt val. Ange K eller D.");
+        }
+    }
+
+    static void EncryptFileAesGcm(string inPath, string outPath, string password)
+    {
+        var salt = new byte[16];
+        var nonce = new byte[12];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(salt);
+        rng.GetBytes(nonce);
+        var key = DeriveKeyFromPassword(password, salt, 32);
+        var plain = System.IO.File.ReadAllBytes(inPath);
+        var cipher = new byte[plain.Length];
+        var tag = new byte[16];
+        using (var aesgcm = new AesGcm(key, tag.Length))
+        {
+            aesgcm.Encrypt(nonce, plain, cipher, tag);
+        }
+        // Spara: [salt][nonce][tag][cipher]
+        using var fs = System.IO.File.Create(outPath);
+        fs.Write(salt, 0, salt.Length);
+        fs.Write(nonce, 0, nonce.Length);
+        fs.Write(tag, 0, tag.Length);
+        fs.Write(cipher, 0, cipher.Length);
+    }
+
+    static void DecryptFileAesGcm(string inPath, string outPath, string password)
+    {
+        var all = System.IO.File.ReadAllBytes(inPath);
+        var salt = new byte[16];
+        var nonce = new byte[12];
+        var tag = new byte[16];
+        Buffer.BlockCopy(all, 0, salt, 0, 16);
+        Buffer.BlockCopy(all, 16, nonce, 0, 12);
+        Buffer.BlockCopy(all, 28, tag, 0, 16);
+        var cipher = new byte[all.Length - 44];
+        Buffer.BlockCopy(all, 44, cipher, 0, cipher.Length);
+        var key = DeriveKeyFromPassword(password, salt, 32);
+        var plain = new byte[cipher.Length];
+        using (var aesgcm = new AesGcm(key, tag.Length))
+        {
+            aesgcm.Decrypt(nonce, cipher, tag, plain);
+        }
+        System.IO.File.WriteAllBytes(outPath, plain);
+    }
+
+    static byte[] DeriveKeyFromPassword(string password, byte[] salt, int keyBytes)
+    {
+        using var kdf = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
+        return kdf.GetBytes(keyBytes);
+    }
+    // ===== SYMMETRISK: AES-GCM =====
+    static void DemoAesGcm(string plaintext)
+    {
+        using var rng = RandomNumberGenerator.Create();
+        var key = new byte[32]; // 256-bit
+        var nonce = new byte[12]; // 96-bit nonce recommended for GCM
+        rng.GetBytes(key);
+        rng.GetBytes(nonce);
+
+        var plainBytes = Encoding.UTF8.GetBytes(plaintext);
+        var cipher = new byte[plainBytes.Length];
+        var tag = new byte[16]; // 128-bit tag
+
+        using (var aesgcm = new AesGcm(key, tag.Length))
+        {
+            aesgcm.Encrypt(nonce, plainBytes, cipher, tag);
+        }
+
+        // Decrypt to verify
+        var decrypted = new byte[plainBytes.Length];
+        using (var aesgcm = new AesGcm(key, tag.Length))
+        {
+            aesgcm.Decrypt(nonce, cipher, tag, decrypted);
+        }
+        var roundtrip = Encoding.UTF8.GetString(decrypted);
+
+        Console.WriteLine("\n[AES-GCM]");
+        PrintLabelValue("Key (Base64)", Convert.ToBase64String(key));
+        PrintLabelValue("Nonce (Base64)", Convert.ToBase64String(nonce));
+        PrintLabelValue("Ciphertext", Convert.ToBase64String(cipher));
+        PrintLabelValue("Tag", Convert.ToBase64String(tag));
+        PrintLabelValue("Dekrypterat", roundtrip);
+    }
+
+    // ===== JÄMFÖR AES CBC OCH GCM =====
+    static void CompareAesCbcGcm(string plaintext)
+    {
+        Console.WriteLine("\n--- Jämförelse: AES CBC vs AES-GCM ---");
+        Console.WriteLine("\n[AES CBC]");
+        using var aes = Aes.Create();
+        aes.KeySize = 256;
+        aes.GenerateKey();
+        aes.GenerateIV();
+        var cipherCbc = AesEncrypt(plaintext, aes.Key, aes.IV);
+        var roundtripCbc = AesDecrypt(cipherCbc, aes.Key, aes.IV);
+        PrintLabelValue("Key (Base64)", Convert.ToBase64String(aes.Key));
+        PrintLabelValue("IV  (Base64)", Convert.ToBase64String(aes.IV));
+        PrintLabelValue("Ciphertext", Convert.ToBase64String(cipherCbc));
+        PrintLabelValue("Dekrypterat", roundtripCbc);
+
+        Console.WriteLine("\n[AES-GCM]");
+        var key = aes.Key; // Use same key for fair comparison
+        using var rng = RandomNumberGenerator.Create();
+        var nonce = new byte[12];
+        rng.GetBytes(nonce);
+        var plainBytes = Encoding.UTF8.GetBytes(plaintext);
+        var cipherGcm = new byte[plainBytes.Length];
+        var tag = new byte[16];
+        using (var aesgcm = new AesGcm(key, tag.Length))
+        {
+            aesgcm.Encrypt(nonce, plainBytes, cipherGcm, tag);
+        }
+        var decrypted = new byte[plainBytes.Length];
+        using (var aesgcm = new AesGcm(key, tag.Length))
+        {
+            aesgcm.Decrypt(nonce, cipherGcm, tag, decrypted);
+        }
+        var roundtripGcm = Encoding.UTF8.GetString(decrypted);
+        PrintLabelValue("Key (Base64)", Convert.ToBase64String(key));
+        PrintLabelValue("Nonce (Base64)", Convert.ToBase64String(nonce));
+        PrintLabelValue("Ciphertext", Convert.ToBase64String(cipherGcm));
+        PrintLabelValue("Tag", Convert.ToBase64String(tag));
+        PrintLabelValue("Dekrypterat", roundtripGcm);
+    }
         }
     }
 
